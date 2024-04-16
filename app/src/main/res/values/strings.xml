@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">CleverCat</string>
+    <!-- mainActivity options list -->
+    <string name="load_game">Load Game</string>
+    <string name="start_a_new_game">Start a new game</string>
+    <string name="how_to_play">How to play</string>
+    <!-- mainActivity options list END -->
+</resources>
