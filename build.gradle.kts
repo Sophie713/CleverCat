@@ -2,14 +2,15 @@
 plugins {
     alias(libs.plugins.androidApplication) apply false
     alias(libs.plugins.jetbrainsKotlinAndroid) apply false
-    id("com.google.dagger.hilt.android") version "2.44" apply false
+    alias(libs.plugins.hiltKotlinAndroid) apply false
 }
+
 buildscript {
     repositories {
         google()
     }
     dependencies {
-
+//       classpath("com.google.dagger:hilt-android-gradle-plugin:2:40:5")
         classpath(libs.androidx.navigation.safe.args.gradle.plugin)
     }
 }

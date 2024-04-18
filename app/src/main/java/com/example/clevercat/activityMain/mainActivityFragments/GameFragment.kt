@@ -25,7 +25,6 @@ import dagger.hilt.android.AndroidEntryPoint
 @AndroidEntryPoint
 class GameFragment : BaseFragment() {
 
-
     private val viewModel by viewModels<GameFragmentViewModel>()
     private val navArgs: GameFragmentArgs by navArgs()
 
@@ -82,10 +81,11 @@ class GameFragment : BaseFragment() {
                 }
 
                 GameFragmentViewModel.ViewModelEvents.LOAD_GAME_FAILED -> {
-                    Toast.makeText(requireContext(), "No saved game found.", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(requireContext(), "No saved game found.", Toast.LENGTH_SHORT)
+                        .show()
                 }
             }
-            })
+        })
         when (navArgs.GameInitialState) {
             GameInitialState.NEW_GAME -> {
                 viewModel.resetGame()

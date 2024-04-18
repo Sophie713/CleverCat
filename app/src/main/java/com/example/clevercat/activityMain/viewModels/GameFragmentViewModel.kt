@@ -8,17 +8,22 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.clevercat.app.prefs
 import com.example.clevercat.dataClasses.NumberItem
+import com.example.clevercat.room.repository.NumberItemsRepository
 import com.example.clevercat.sharedClasses.constants.Constants
 import com.example.clevercat.sharedClasses.extentions.getById
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Dispatchers.IO
+import kotlinx.coroutines.flow.forEach
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class GameFragmentViewModel @Inject constructor() : ViewModel() {
+class GameFragmentViewModel @Inject constructor(
+   private val numbersRepository: NumberItemsRepository
+) : ViewModel() {
     private var numbersArray = mutableStateListOf<NumberItem>()
 
     val viewModelEvents = MutableLiveData<ViewModelEvents>()
@@ -33,6 +38,10 @@ class GameFragmentViewModel @Inject constructor() : ViewModel() {
     fun addNumbers(howManyLines: Int) {
         //get latest id
         var numberId = prefs.latestId
+        viewModelScope.launch(IO) {//todo handler
+           val last = numbersRepository.getLast().id
+            Log.e(Constants.LOG_TAG, last.toString())
+        }
         //error or first game
         if (numberId == null || numberId == -1) {
             numbersArray.clear()
@@ -85,6 +94,13 @@ class GameFragmentViewModel @Inject constructor() : ViewModel() {
     }
 
     fun loadGame() {
+        viewModelScope.launch(IO) {//todo handler
+            val list = numbersRepository.getAllNumbers()
+            list.forEach {
+                Log.e(Constants.LOG_TAG, it.toString())
+            }
+
+        }
         val type = object : TypeToken<ArrayList<NumberItem?>?>() {}.type
         val game: ArrayList<NumberItem> = Gson().fromJson(prefs.gameState, type)
         setNumbersArray(game)
@@ -93,6 +109,7 @@ class GameFragmentViewModel @Inject constructor() : ViewModel() {
     fun saveGame() {
         viewModelScope.launch(Dispatchers.IO) {
             prefs.gameState = Gson().toJson(numbersArray)
+            numbersRepository.upsertItems(numbersArray)
         }
 
     }
