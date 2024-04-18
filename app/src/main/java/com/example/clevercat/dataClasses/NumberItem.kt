@@ -8,6 +8,23 @@ data class NumberItem(
     var topNeighbour: Int,
     var bottomNeighbour: Int,
 ) {
-    var adapterPosition: Int = 0
+    var isHint = false
     var isNumberStillInGame = true
+    var isSelected = false
+
+    override fun toString(): String {
+        return "id: $id" +
+                "\nnumberValue: $numberValue" +
+                "\nleftNeighbour: $leftNeighbour" +
+                "\nrightNeighbour: $rightNeighbour" +
+                "\ntopNeighbour: $topNeighbour" +
+                "\nbottomNeighbour: $bottomNeighbour" +
+                "\nisHint: $isHint" +
+                "\nisNumberStillInGame: $isNumberStillInGame"
+    }
+
+    fun clearState() {
+        isHint = false
+        isSelected = false
+    }
 }

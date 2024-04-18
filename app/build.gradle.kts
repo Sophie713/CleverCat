@@ -68,9 +68,11 @@ dependencies {
     implementation(libs.androidx.recyclerview)
     implementation(libs.androidx.lifecycle.livedata.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
+    implementation(libs.androidx.constraintlayout.compose)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
+    implementation(libs.androidx.runtime.livedata)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
@@ -78,11 +80,13 @@ dependencies {
     //dependency injection
     implementation(libs.hilt.android)
     annotationProcessor(libs.hilt.compiler)
-
     // use by viewBinding
     implementation(libs.fragmentviewbindingdelegate)
     //Gson
     implementation(libs.gson)
+    //Room database
+    implementation(libs.androidx.room.ktx)
+    kapt(libs.androidx.room.compiler)
 }
 // Allow references to generated code
 kapt {

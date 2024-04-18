@@ -7,5 +7,4 @@ interface GameOperationsInterface {
     fun saveGame(numbersArray: ArrayList<NumberItem>)
     fun loadGame()
     fun resetGame()
-    fun showHint()
 }
