@@ -20,7 +20,7 @@ import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-internal abstract class AppModule {
+object AppModule {
 
     @Provides
     @Singleton
@@ -34,10 +34,12 @@ internal abstract class AppModule {
 
     @Provides
     @Singleton
-    fun providesNumberItemsRepository (
+    fun providesNumberItemsRepository(
         numberItemsDao: CleverCatDatabase
-    ):NumberItemsRepository {
+    ): NumberItemsRepository {
         return NumberItemsRepository(numberItemsDao.numberItemsDao())
     }
+
+
 
 }
