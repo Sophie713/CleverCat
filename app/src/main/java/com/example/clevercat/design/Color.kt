@@ -1,5 +1,7 @@
 package com.example.compose
+
 import androidx.compose.ui.graphics.Color
+
 //todo migrate
 val md_theme_light_primary = Color(0xFF7332DF)
 val md_theme_light_onPrimary = Color(0xFFFFFFFF)
@@ -65,3 +67,9 @@ val md_theme_dark_scrim = Color(0xFF000000)
 
 
 val seed = Color(0xFF9257FF)
+
+//Blue
+val blueHint = Color(0xFFfcd797)
+val blueActive = Color(0xFF84b3f5)
+val blueInactive = Color(0xFF97e6f7)
+
