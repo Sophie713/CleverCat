@@ -28,4 +28,8 @@ class NumberItemsRepository @Inject constructor(
     fun getLast(): NumberItem {
         return dao.getLast()
     }
+
+    fun getNumbersCount() : Int {
+        return dao.getItemsCount()
+    }
 }

@@ -2,18 +2,16 @@ package com.example.clevercat.activityMain.module
 
 import android.content.Context
 import androidx.room.Room
-import com.example.clevercat.activityMain.MainActivity
-import com.example.clevercat.activityMain.viewModels.GameFragmentViewModel
-import com.example.clevercat.app.CleverCatApplication
+import com.example.clevercat.activityMain.useCases.DeleteSavedGameUseCase
+import com.example.clevercat.activityMain.useCases.GetGameNumbersUseCase
+import com.example.clevercat.activityMain.useCases.GetLastNumberUseCase
+import com.example.clevercat.activityMain.useCases.GetSavedGameNumbersCount
+import com.example.clevercat.activityMain.useCases.SaveGameUseCase
 import com.example.clevercat.room.CleverCatDatabase
-import com.example.clevercat.room.NumberItemsDao
 import com.example.clevercat.room.repository.NumberItemsRepository
-import com.example.clevercat.sharedClasses.abstractClasses.BaseFragment
-import dagger.Binds
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
-import dagger.hilt.android.components.ActivityComponent
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
@@ -35,9 +33,40 @@ object AppModule {
     @Provides
     @Singleton
     fun providesNumberItemsRepository(
-        numberItemsDao: CleverCatDatabase
+        numberItemsDatabase: CleverCatDatabase
     ): NumberItemsRepository {
-        return NumberItemsRepository(numberItemsDao.numberItemsDao())
+        return NumberItemsRepository(numberItemsDatabase.numberItemsDao())
+    }
+
+
+    @Provides
+    @Singleton
+    fun providesDeleteSavedGameUseCase(numberItemsRepository: NumberItemsRepository):DeleteSavedGameUseCase {
+        return DeleteSavedGameUseCase(numberItemsRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun providesGetGameNumbersUseCase(numberItemsRepository: NumberItemsRepository):GetGameNumbersUseCase {
+        return GetGameNumbersUseCase(numberItemsRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun providesGetLastNumberUseCase(numberItemsRepository: NumberItemsRepository):GetLastNumberUseCase {
+        return GetLastNumberUseCase(numberItemsRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun providesSaveGameUseCase(numberItemsRepository: NumberItemsRepository):SaveGameUseCase {
+        return SaveGameUseCase(numberItemsRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun providesGetSavedGameNumbersCount(numberItemsRepository: NumberItemsRepository): GetSavedGameNumbersCount{
+        return GetSavedGameNumbersCount(numberItemsRepository)
     }
 
 

@@ -10,10 +10,13 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -27,6 +30,10 @@ import androidx.constraintlayout.compose.Dimension
 import com.example.clevercat.activityMain.iterfaces.GameOperationsInterface
 import com.example.clevercat.activityMain.iterfaces.GameplayInterface
 import com.example.clevercat.dataClasses.NumberItem
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 @Composable
 fun ComposeGameFragment(
@@ -37,7 +44,11 @@ fun ComposeGameFragment(
 ) {
     ConstraintLayout(modifier = modifier.fillMaxSize()) {
         val (buttonsLayout, grid) = createRefs()
+        val state = rememberLazyGridState()
+        // Remember a CoroutineScope to be able to launch
+        val coroutineScope = rememberCoroutineScope()
         LazyVerticalGrid(
+            state = state,
             columns = GridCells.Fixed(9),
             modifier = modifier.constrainAs(grid) {
                 top.linkTo(parent.top, margin = Dp(16f))
@@ -45,41 +56,42 @@ fun ComposeGameFragment(
                 height = Dimension.fillToConstraints
             }
         ) {
-            items(listOfNumbers.size - 9) {
-                val number = listOfNumbers[it]
-                Box(
-                    contentAlignment = Alignment.Center, modifier = Modifier
-                        .aspectRatio(1f)
-                        .background(
-                            color = if (number.isHint) {
-                                MaterialTheme.colorScheme.inversePrimary
-                            } else if (number.isNumberStillInGame) {
-                                MaterialTheme.colorScheme.secondaryContainer
+            if (listOfNumbers.size > 9) {
+                items(listOfNumbers.size - 9) {
+                    val number = listOfNumbers[it]
+                    Box(
+                        contentAlignment = Alignment.Center, modifier = Modifier
+                            .aspectRatio(1f)
+                            .background(
+                                color = if (number.isHint) {
+                                    MaterialTheme.colorScheme.inversePrimary
+                                } else if (number.isNumberStillInGame) {
+                                    MaterialTheme.colorScheme.secondaryContainer
+                                } else {
+                                    MaterialTheme.colorScheme.tertiaryContainer
+                                }
+                            )
+                            .clickable {
+                                gameplayInterface.clickNumber(number)
+                            }
+                    ) {
+                        Text(
+                            text = number.numberValue.toString(),
+                            fontWeight = FontWeight.Bold,
+                            color = if (number.isNumberStillInGame) {
+                                Color.Black
                             } else {
-                                MaterialTheme.colorScheme.tertiaryContainer
+                                Color.White
+                            },
+                            fontSize = if (number.isSelected) {
+                                26.sp
+                            } else {
+                                20.sp
                             }
                         )
-                        .clickable {
-                            gameplayInterface.clickNumber(number)
-                        }
-                ) {
-                    Text(
-                        text = number.numberValue.toString(),
-                        fontWeight = FontWeight.Bold,
-                        color = if (number.isNumberStillInGame) {
-                            Color.Black
-                        } else {
-                            Color.White
-                        },
-                        fontSize = if (number.isSelected) {
-                            26.sp
-                        } else {
-                            20.sp
-                        }
-                    )
+                    }
                 }
             }
-
         }
         Row(
             horizontalArrangement = Arrangement.SpaceEvenly,
@@ -89,7 +101,13 @@ fun ComposeGameFragment(
                     bottom.linkTo(parent.bottom)
                 }
         ) {
-            Button(onClick = { gameplayInterface.showHint() }, modifier) {
+            Button(onClick = {
+                coroutineScope.launch(Dispatchers.IO) {
+                    gameplayInterface.showHint()?.let {
+                        withContext(Dispatchers.Main) { state.scrollToItem(it) }
+                    }
+                }
+            }, modifier) {
                 GameFragmentBottomMenuButton("Hint")
             }
             Button(onClick = { gameplayInterface.addNumbers(4) }, modifier) {

@@ -17,6 +17,7 @@ import com.example.clevercat.activityMain.viewModels.GameFragmentViewModel
 import com.example.clevercat.dataClasses.NumberItem
 import com.example.clevercat.sharedClasses.abstractClasses.BaseFragment
 import com.example.clevercat.sharedClasses.constants.GameInitialState
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
 
 /**
@@ -52,8 +53,8 @@ class GameFragment : BaseFragment() {
 
                     },
                     gameplayInterface = object : GameplayInterface {
-                        override fun showHint() {
-                            viewModel.showHint()
+                        override fun showHint(): Int? {
+                            return viewModel.showHint()
                         }
 
                         override fun addNumbers(numberOfRows: Int) {
@@ -83,6 +84,13 @@ class GameFragment : BaseFragment() {
                 GameFragmentViewModel.ViewModelEvents.LOAD_GAME_FAILED -> {
                     Toast.makeText(requireContext(), "No saved game found.", Toast.LENGTH_SHORT)
                         .show()
+                }
+
+                GameFragmentViewModel.ViewModelEvents.GAME_OVER -> {
+                    MaterialAlertDialogBuilder(requireContext()).setTitle("Game Over")
+                        .setPositiveButton("OK", { _, _ ->
+                            viewModel.resetGame()
+                        }).show()
                 }
             }
         })
