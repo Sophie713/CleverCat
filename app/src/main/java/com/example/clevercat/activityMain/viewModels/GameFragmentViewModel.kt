@@ -6,14 +6,14 @@ import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.clevercat.activityMain.useCases.DeleteSavedGameUseCase
-import com.example.clevercat.activityMain.useCases.GetGameNumbersUseCase
-import com.example.clevercat.activityMain.useCases.GetLastNumberUseCase
-import com.example.clevercat.activityMain.useCases.GetSavedGameNumbersCount
-import com.example.clevercat.activityMain.useCases.SaveGameUseCase
-import com.example.clevercat.app.prefs
+import com.example.clevercat.database.useCases.DeleteSavedGameUseCase
+import com.example.clevercat.database.useCases.GetGameNumbersUseCase
+import com.example.clevercat.database.useCases.GetLastNumberUseCase
+import com.example.clevercat.database.useCases.GetSavedGameNumbersCount
+import com.example.clevercat.database.useCases.SaveGameUseCase
 import com.example.clevercat.dataClasses.NumberItem
 import com.example.clevercat.sharedClasses.constants.Constants
+import com.example.clevercat.sharedClasses.errorHandling.DefaultCoroutineExceptionHandler
 import com.example.clevercat.sharedClasses.extentions.getById
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -50,14 +50,9 @@ class GameFragmentViewModel @Inject constructor(
         numberOfClicksAfterHint = 0
         showHintUI(hintNumber1, hintNumber2, false)
         //get latest id
-        var numberId = prefs.latestId
-        viewModelScope.launch(Dispatchers.IO) {//todo handler
-            getLastNumberUseCase.getLastNumber().id
-        }
-        //error or first game
-        if (numberId == null || numberId == -1) {
-            numbersArray.clear()
-            numberId = 0
+        var latestId = 0
+        if(!numbersArray.isNullOrEmpty()){
+            latestId = numbersArray.get(numbersArray.size-1).id
         }
         //todo if too many numbers, show dialog
         //add 9 more numbers to ensure that when adding more, neighbours will match
@@ -69,22 +64,20 @@ class GameFragmentViewModel @Inject constructor(
              *  so the index will be equal to the current size */
             numbersArray.add(
                 NumberItem(
-                    id = numberId,
+                    id = latestId,
                     numberValue = newNumber,
-                    rightNeighbour = numberId + 1,
-                    topNeighbour = numberId - 9,
-                    bottomNeighbour = numberId + 9,
-                    leftNeighbour = numberId - 1,
+                    rightNeighbour = latestId + 1,
+                    topNeighbour = latestId - 9,
+                    bottomNeighbour = latestId + 9,
+                    leftNeighbour = latestId - 1,
                 )
             )
-            numberId++
+            latestId++
         }
-
-        prefs.latestId = numberId
     }
 
     private fun updateNumber(numberItem: NumberItem?) {
-        if(numberItem == null){
+        if (numberItem == null) {
             return
         }
         val index = numbersArray.indexOf(numberItem)
@@ -100,7 +93,6 @@ class GameFragmentViewModel @Inject constructor(
             resetGame()
         } else {
             numbersArray.addAll(savedGame)
-            prefs.latestId = (numbersArray.last().id.plus(1))
         }
     }
 
@@ -109,7 +101,9 @@ class GameFragmentViewModel @Inject constructor(
     }
 
     fun loadGame() {
-        viewModelScope.launch(Dispatchers.IO) {//todo handler
+        viewModelScope.launch(Dispatchers.IO + DefaultCoroutineExceptionHandler(this.javaClass.name) {
+
+        }) {
             val numbers = getGameNumbersUseCase.getAllNumbers()
             withContext(Dispatchers.Main) {
                 setNumbersArray(numbers)
@@ -118,7 +112,9 @@ class GameFragmentViewModel @Inject constructor(
     }
 
     fun saveGame() {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch(Dispatchers.IO + DefaultCoroutineExceptionHandler(this.javaClass.name) {
+
+        }) {
             if (numbersArray.size < getSavedGameNumbersCount.getNumbersCount()) {
                 deleteSavedGameUseCase.deleteCurrentlySavedGame()
             }
@@ -128,7 +124,6 @@ class GameFragmentViewModel @Inject constructor(
 
     fun resetGame() {
         numbersArray.clear()
-        prefs.latestId = 0
         addNumbers(10)
     }
 
@@ -158,7 +153,7 @@ class GameFragmentViewModel @Inject constructor(
                 }
             }
         }
-        viewModelEvents.value = ViewModelEvents.NO_MATCH_FOUND
+        viewModelEvents.postValue(ViewModelEvents.NO_MATCH_FOUND)
         return null
     }
 

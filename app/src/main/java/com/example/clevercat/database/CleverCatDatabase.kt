@@ -1,4 +1,4 @@
-package com.example.clevercat.room
+package com.example.clevercat.database
 
 import androidx.room.Database
 import androidx.room.RoomDatabase

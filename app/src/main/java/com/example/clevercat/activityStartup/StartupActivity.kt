@@ -37,6 +37,7 @@ class StartupActivity : AppCompatActivity() {
                         R.anim.s_fade_in,
                         R.anim.s_fade_out
                     )
+                    finish()
                 } else {
                     overridePendingTransition(R.anim.s_fade_in, R.anim.s_fade_out);
                 }

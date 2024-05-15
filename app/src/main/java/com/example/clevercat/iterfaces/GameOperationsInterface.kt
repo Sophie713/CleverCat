@@ -1,4 +1,4 @@
-package com.example.clevercat.activityMain.iterfaces
+package com.example.clevercat.iterfaces
 
 import com.example.clevercat.dataClasses.NumberItem
 

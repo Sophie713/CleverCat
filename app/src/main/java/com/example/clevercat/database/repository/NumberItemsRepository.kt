@@ -1,8 +1,7 @@
-package com.example.clevercat.room.repository
+package com.example.clevercat.database.repository
 
 import com.example.clevercat.dataClasses.NumberItem
-import com.example.clevercat.room.NumberItemsDao
-import kotlinx.coroutines.flow.Flow
+import com.example.clevercat.database.NumberItemsDao
 import javax.inject.Inject
 
 class NumberItemsRepository @Inject constructor(
@@ -25,7 +24,7 @@ class NumberItemsRepository @Inject constructor(
         dao.deleteAllNumbers()
     }
 
-    fun getLast(): NumberItem {
+    fun getLast(): NumberItem? {
         return dao.getLast()
     }
 

@@ -10,9 +10,9 @@ import androidx.compose.ui.platform.ComposeView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.navArgs
-import com.example.clevercat.activityMain.iterfaces.GameOperationsInterface
-import com.example.clevercat.activityMain.iterfaces.GameplayInterface
-import com.example.clevercat.activityMain.mainActivityFragments.ComposeUI.ComposeGameFragment
+import com.example.clevercat.iterfaces.GameOperationsInterface
+import com.example.clevercat.iterfaces.GameplayInterface
+import com.example.clevercat.activityMain.mainActivityFragments.GameFragmentUI.ComposeGameFragment
 import com.example.clevercat.activityMain.viewModels.GameFragmentViewModel
 import com.example.clevercat.dataClasses.NumberItem
 import com.example.clevercat.sharedClasses.abstractClasses.BaseFragment

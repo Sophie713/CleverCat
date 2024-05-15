@@ -1,6 +1,6 @@
-package com.example.clevercat.activityMain.useCases
+package com.example.clevercat.database.useCases
 
-import com.example.clevercat.room.repository.NumberItemsRepository
+import com.example.clevercat.database.repository.NumberItemsRepository
 import javax.inject.Inject
 
 class GetSavedGameNumbersCount @Inject constructor(private val numberItemsRepository: NumberItemsRepository) {

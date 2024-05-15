@@ -1,12 +1,10 @@
-package com.example.clevercat.room
+package com.example.clevercat.database
 
 import androidx.room.Dao
 import androidx.room.Query
 import androidx.room.Upsert
 import com.example.clevercat.dataClasses.NumberItem
 import com.example.clevercat.sharedClasses.constants.Constants.NUMBERS_TABLE_NAME
-import dagger.Provides
-import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface NumberItemsDao {
@@ -23,7 +21,7 @@ interface NumberItemsDao {
     fun deleteAllNumbers()
 
     @Query("SELECT * FROM $NUMBERS_TABLE_NAME ORDER BY id DESC LIMIT 1")
-    fun getLast(): NumberItem
+    fun getLast(): NumberItem?
 
     @Query("SELECT COUNT(*) FROM $NUMBERS_TABLE_NAME")
     fun getItemsCount(): Int
