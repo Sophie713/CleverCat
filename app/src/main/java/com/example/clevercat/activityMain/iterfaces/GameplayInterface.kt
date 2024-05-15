@@ -4,7 +4,7 @@ import com.example.clevercat.dataClasses.NumberItem
 
 interface GameplayInterface {
 
-    fun showHint()
+    fun showHint() : Int?
 
     fun addNumbers(numberOfRows: Int)
 

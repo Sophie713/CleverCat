@@ -1,6 +1,13 @@
 package com.example.clevercat.dataClasses
 
+import androidx.room.Entity
+import androidx.room.Ignore
+import androidx.room.PrimaryKey
+import com.example.clevercat.sharedClasses.constants.Constants
+
+@Entity(tableName = Constants.NUMBERS_TABLE_NAME)
 data class NumberItem(
+    @PrimaryKey
     val id: Int,
     val numberValue: Int,
     var leftNeighbour: Int,
@@ -8,8 +15,11 @@ data class NumberItem(
     var topNeighbour: Int,
     var bottomNeighbour: Int,
 ) {
-    var isHint = false
     var isNumberStillInGame = true
+
+    @Ignore
+    var isHint = false
+    @Ignore
     var isSelected = false
 
     override fun toString(): String {

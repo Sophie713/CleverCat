@@ -17,6 +17,7 @@ import com.example.clevercat.activityMain.viewModels.GameFragmentViewModel
 import com.example.clevercat.dataClasses.NumberItem
 import com.example.clevercat.sharedClasses.abstractClasses.BaseFragment
 import com.example.clevercat.sharedClasses.constants.GameInitialState
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
 
 /**
@@ -24,7 +25,6 @@ import dagger.hilt.android.AndroidEntryPoint
  */
 @AndroidEntryPoint
 class GameFragment : BaseFragment() {
-
 
     private val viewModel by viewModels<GameFragmentViewModel>()
     private val navArgs: GameFragmentArgs by navArgs()
@@ -53,8 +53,8 @@ class GameFragment : BaseFragment() {
 
                     },
                     gameplayInterface = object : GameplayInterface {
-                        override fun showHint() {
-                            viewModel.showHint()
+                        override fun showHint(): Int? {
+                            return viewModel.showHint()
                         }
 
                         override fun addNumbers(numberOfRows: Int) {
@@ -82,10 +82,18 @@ class GameFragment : BaseFragment() {
                 }
 
                 GameFragmentViewModel.ViewModelEvents.LOAD_GAME_FAILED -> {
-                    Toast.makeText(requireContext(), "No saved game found.", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(requireContext(), "No saved game found.", Toast.LENGTH_SHORT)
+                        .show()
+                }
+
+                GameFragmentViewModel.ViewModelEvents.GAME_OVER -> {
+                    MaterialAlertDialogBuilder(requireContext()).setTitle("Game Over")
+                        .setPositiveButton("OK", { _, _ ->
+                            viewModel.resetGame()
+                        }).show()
                 }
             }
-            })
+        })
         when (navArgs.GameInitialState) {
             GameInitialState.NEW_GAME -> {
                 viewModel.resetGame()

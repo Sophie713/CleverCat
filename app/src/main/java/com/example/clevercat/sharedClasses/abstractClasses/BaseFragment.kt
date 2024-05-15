@@ -5,5 +5,5 @@ import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
 @AndroidEntryPoint
-abstract class BaseFragment  @Inject constructor() : Fragment() {
+abstract class BaseFragment : Fragment() {
 }

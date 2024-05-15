@@ -6,24 +6,34 @@ import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.clevercat.activityMain.useCases.DeleteSavedGameUseCase
+import com.example.clevercat.activityMain.useCases.GetGameNumbersUseCase
+import com.example.clevercat.activityMain.useCases.GetLastNumberUseCase
+import com.example.clevercat.activityMain.useCases.GetSavedGameNumbersCount
+import com.example.clevercat.activityMain.useCases.SaveGameUseCase
 import com.example.clevercat.app.prefs
 import com.example.clevercat.dataClasses.NumberItem
 import com.example.clevercat.sharedClasses.constants.Constants
 import com.example.clevercat.sharedClasses.extentions.getById
-import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @HiltViewModel
-class GameFragmentViewModel @Inject constructor() : ViewModel() {
+class GameFragmentViewModel @Inject constructor(
+    private val getGameNumbersUseCase: GetGameNumbersUseCase,
+    private val getLastNumberUseCase: GetLastNumberUseCase,
+    private val saveGameUseCase: SaveGameUseCase,
+    private val deleteSavedGameUseCase: DeleteSavedGameUseCase,
+    private val getSavedGameNumbersCount: GetSavedGameNumbersCount
+) : ViewModel() {
     private var numbersArray = mutableStateListOf<NumberItem>()
 
     val viewModelEvents = MutableLiveData<ViewModelEvents>()
 
-    enum class ViewModelEvents { NO_MATCH_FOUND, LOAD_GAME_FAILED }
+    enum class ViewModelEvents { NO_MATCH_FOUND, LOAD_GAME_FAILED, GAME_OVER }
 
     //has nonsense value option so we dont have to worry about nullability
     private var previouslyClickedNumber = Constants.NON_EXISTING_NUMBER
@@ -31,8 +41,19 @@ class GameFragmentViewModel @Inject constructor() : ViewModel() {
     private var hintNumber1: NumberItem? = null
     private var hintNumber2: NumberItem? = null
     fun addNumbers(howManyLines: Int) {
+        val arrayLength = numbersArray.size
+        if (arrayLength > 9 && numbersArray.get(arrayLength - 1).id > 2147483000) {
+            viewModelEvents.postValue(ViewModelEvents.GAME_OVER)
+            return
+        }
+        //hide hint
+        numberOfClicksAfterHint = 0
+        showHintUI(hintNumber1, hintNumber2, false)
         //get latest id
         var numberId = prefs.latestId
+        viewModelScope.launch(Dispatchers.IO) {//todo handler
+            getLastNumberUseCase.getLastNumber().id
+        }
         //error or first game
         if (numberId == null || numberId == -1) {
             numbersArray.clear()
@@ -62,7 +83,10 @@ class GameFragmentViewModel @Inject constructor() : ViewModel() {
         prefs.latestId = numberId
     }
 
-    fun updateNumber(numberItem: NumberItem) {
+    private fun updateNumber(numberItem: NumberItem?) {
+        if(numberItem == null){
+            return
+        }
         val index = numbersArray.indexOf(numberItem)
         if (index > 0) {
             numbersArray.removeAt(index)
@@ -70,9 +94,9 @@ class GameFragmentViewModel @Inject constructor() : ViewModel() {
         }
     }
 
-    private fun setNumbersArray(savedGame: ArrayList<NumberItem>) {
+    private fun setNumbersArray(savedGame: List<NumberItem>) {
         numbersArray.clear()
-        if (savedGame.isNullOrEmpty()) {
+        if (savedGame.isEmpty()) {
             resetGame()
         } else {
             numbersArray.addAll(savedGame)
@@ -85,33 +109,34 @@ class GameFragmentViewModel @Inject constructor() : ViewModel() {
     }
 
     fun loadGame() {
-        val type = object : TypeToken<ArrayList<NumberItem?>?>() {}.type
-        val game: ArrayList<NumberItem> = Gson().fromJson(prefs.gameState, type)
-        setNumbersArray(game)
+        viewModelScope.launch(Dispatchers.IO) {//todo handler
+            val numbers = getGameNumbersUseCase.getAllNumbers()
+            withContext(Dispatchers.Main) {
+                setNumbersArray(numbers)
+            }
+        }
     }
 
     fun saveGame() {
         viewModelScope.launch(Dispatchers.IO) {
-            prefs.gameState = Gson().toJson(numbersArray)
+            if (numbersArray.size < getSavedGameNumbersCount.getNumbersCount()) {
+                deleteSavedGameUseCase.deleteCurrentlySavedGame()
+            }
+            saveGameUseCase.saveGame(numbersArray)
         }
-
     }
 
     fun resetGame() {
         numbersArray.clear()
-        prefs.gameState = "[]"
         prefs.latestId = 0
         addNumbers(10)
     }
 
-    fun showHint() {
+    fun showHint(): Int? {
         numberOfClicksAfterHint = 0
-        var isThereMatch = false
-        //subarray to avoid matches with invisible numbers
-        val matchSubArray: ArrayList<NumberItem> = arrayListOf<NumberItem>()
-        matchSubArray.addAll(numbersArray.subList(0, numbersArray.size - 9))
-        for (index in 0 until matchSubArray.size) {
-            val numberItem = matchSubArray[index]
+        //sub-array to avoid matches with invisible numbers
+        val matchSubArray = numbersArray.dropLast(9)
+        matchSubArray.forEachIndexed { index, numberItem ->
             if (numberItem.isNumberStillInGame) {
                 val rightNeighbour = matchSubArray.getById(numberItem.rightNeighbour)
                 if (rightNeighbour != null &&
@@ -120,8 +145,7 @@ class GameFragmentViewModel @Inject constructor() : ViewModel() {
                             )
                 ) {
                     showHintUI(numberItem, rightNeighbour, true)
-                    isThereMatch = true
-                    break
+                    return index
                 }
                 val bottomNeighbour = matchSubArray.getById(numberItem.bottomNeighbour)
                 if (bottomNeighbour != null &&
@@ -130,19 +154,17 @@ class GameFragmentViewModel @Inject constructor() : ViewModel() {
                             )
                 ) {
                     showHintUI(numberItem, bottomNeighbour, true)
-                    isThereMatch = true
-                    break
+                    return index
                 }
             }
         }
-        if (!isThereMatch) {
-            viewModelEvents.value = ViewModelEvents.NO_MATCH_FOUND
-        }
+        viewModelEvents.value = ViewModelEvents.NO_MATCH_FOUND
+        return null
     }
 
-    private fun showHintUI(firstNumber: NumberItem, secondNumber: NumberItem, isShow: Boolean) {
-        firstNumber.isHint = isShow
-        secondNumber.isHint = isShow
+    private fun showHintUI(firstNumber: NumberItem?, secondNumber: NumberItem?, isShow: Boolean) {
+        firstNumber?.isHint = isShow
+        secondNumber?.isHint = isShow
         if (isShow) {
             hintNumber1 = firstNumber
             hintNumber2 = secondNumber
@@ -198,13 +220,15 @@ class GameFragmentViewModel @Inject constructor() : ViewModel() {
                 previouslyClickedNumber = clickedNumber
                 updateNumber(clickedNumber)
             }
-            logNumber(clickedNumber)
         }
     }
 
+    /**
+     * logging for debug purposes
+     */
     private fun logNumber(clickedNumber: NumberItem) {
         Log.e(
-            "xyz",
+            Constants.LOG_TAG,
             "\nNUMBER: ${clickedNumber.numberValue}," +
                     "\nid: ${clickedNumber.id}," +
                     "\nright: ${clickedNumber.rightNeighbour} " +
@@ -216,7 +240,7 @@ class GameFragmentViewModel @Inject constructor() : ViewModel() {
 
     private fun markNumberAsMatched(removedNumber: NumberItem) {
         // FIRST NUMBER UPDATE
-        val index = numbersArray.indexOf(removedNumber);
+        val index = numbersArray.indexOf(removedNumber)
         removedNumber.isNumberStillInGame = false
         //find neighbours
         val rightNeighbour = numbersArray.getById(removedNumber.rightNeighbour)
